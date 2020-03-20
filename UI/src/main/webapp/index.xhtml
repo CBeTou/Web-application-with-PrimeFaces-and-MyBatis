@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+<!--@elvariable id="user" type="DTO.User"-->
+<!--@elvariable id="tableBean" type="Beans.TableBean"-->
+<h:head>
+    <title>UserList with PrimeFaces and MyBatis</title>
+</h:head>
+
+<f:event type="preRenderView" listener="#{tableBean.init}" />
+
+<h:form id="form1">
+    <p:growl id="msgs" showDetail="true" skipDetailIfEqualsSummary="true" />
+    <p:panel>
+        <p:dataTable
+                id="list"
+                value="#{tableBean.users}"
+                var="user"
+                paginator="true"
+                rows="10"
+                rowsPerPageTemplate="5,10,15"
+                editable="true"
+                rowKey="#{user.userId}"
+                selection="#{tableBean.selectedUser}"
+                selectionMode="single">
+
+            <p:ajax event="rowSelect" listener="#{tableBean.onRowSelect}" update=":form1"  />
+
+            <f:facet name="header">
+               Список пользователей
+            </f:facet>
+
+            <p:column sortBy="#{user.userId}" headerText="Id">
+                <h:outputText value="#{user.userId}" />
+            </p:column>
+
+            <p:column headerText="Ф.И.О">
+                <h:outputText value="#{user.userName}" />
+            </p:column>
+
+            <p:column headerText="Пол">
+                <h:outputText value="#{user.userGender}" />
+            </p:column>
+
+            <p:column sortBy="#{user.birthDate}" headerText="Дата рождения">
+                <h:outputText value="#{user.birthDate}" />
+            </p:column>
+
+        </p:dataTable>
+    </p:panel>
+
+    <p:panel>
+        <p:commandButton value="Добавить"
+                         onclick="PF('adddlg').show()"
+                         process="@this"
+                         style="width:200px;height:30px"/>
+
+        <p:commandButton value="Изменить"
+                         onclick="PF('dlg2').show();"
+                         process="@this"
+                         update=":form1:msgs"
+                         style="width:200px;height:30px"/>
+
+        <p:commandButton value="Удалить"
+                         onclick="PF('dlt1').show();"
+                         process="@this"
+                         update=":form1:msgs"
+                         style="width:200px;height:30px"/>
+    </p:panel>
+
+    <p:dialog id="addDialog" header="Новый пользователь" widgetVar="adddlg" resizable="false" showEffect="clip" hideEffect="fold">
+        <h:panelGrid columns="3" style="margin-bottom:10px">
+            <h:outputLabel for="userName" value="Ф.И.О" />
+            <p:inputText id="userName" value="#{tableBean.inputtedName}" required="true" >
+                <f:validateLength minimum="1" maximum="100" />
+            </p:inputText>
+            <p:message for="userName" value=""/>
+
+            <h:outputLabel for="userGender" value="Пол" />
+            <h:selectOneMenu id = "userGender" value="#{tableBean.inputtedGender}"  dynamic="true" style="width:100%">
+                <f:selectItem itemLabel="Мужской" itemValue="Мужской" />
+                <f:selectItem itemLabel="Женский" itemValue="Женский"/>
+            </h:selectOneMenu>
+            <p:message for="userGender" value=""/>
+
+            <h:outputLabel for="birthDate" value="Дата рождения" />
+            <p:calendar id="birthDate"
+                        pattern="yyyy-MM-dd"
+                        value="#{tableBean.inputtedDate}">
+            </p:calendar>
+            <p:message for="birthDate" value=""/>
+
+        </h:panelGrid>
+        <p:commandButton
+                id="addBtn"
+                value="Добавить"
+                action="#{tableBean.add}"
+                process="@this addDialog"
+                update=":form1"
+                validateClient="true"
+                oncomplete="PF('adddlg').hide();"
+        />
+    </p:dialog>
+
+    <p:dialog id="updDialog" header="Изменить пользователя" widgetVar="dlg2" resizable="false" showEffect="clip" hideEffect="fold">
+    <h:panelGrid columns="3" style="margin-bottom:10px">
+    <h:outputLabel for="newName" value="Ф.И.О" />
+    <p:inputText id="newName" value="#{tableBean.selectedUser.userName}" required="true" >
+        <f:validateLength minimum="1" maximum="100" />
+    </p:inputText>
+    <p:message for="newName" value=""/>
+
+    <h:outputLabel for="newGender" value="Пол" />
+    <h:selectOneMenu id = "newGender" value="#{tableBean.selectedUser.userGender}"  dynamic="true" style="width:100%">
+        <f:selectItem itemLabel="Мужской" itemValue="Мужской" />
+        <f:selectItem itemLabel="Женский" itemValue="Женский"/>
+    </h:selectOneMenu>
+    <p:message for="newGender" value=""/>
+
+        <h:outputLabel for="newDate" value="Дата рождения" />
+        <p:calendar id="newDate"
+                    pattern="yyyy-MM-dd"
+                    value="#{tableBean.selectedUser.birthDate}">
+        </p:calendar>
+        <p:message for="newDate" value=""/>
+    </h:panelGrid>
+    <p:commandButton
+            id="updBtn"
+            value="Принять"
+            action="#{tableBean.update}"
+            process="@this updDialog"
+            update=":form1"
+            validateClient="true"
+            oncomplete="PF('dlg2').hide();"
+    />
+    </p:dialog>
+    <p:dialog id="dltDialog" header="Вы уверены, что хотите удалить пользователя?" widgetVar="dlt1" resizable="false" showEffect="clip" hideEffect="fold">
+    <h:panelGrid columns="2" cellpadding="4">
+        <h:outputText value="Id:" />
+        <h:outputText value="#{tableBean.selectedUser.userId}" />
+
+        <h:outputText value="Ф.И.О:" />
+        <h:outputText value="#{tableBean.selectedUser.userName}" />
+
+        <h:outputText value="Дата рождения:" />
+        <h:outputText value="#{tableBean.selectedUser.birthDate}" />
+
+        <h:outputText value="Пол:" />
+        <h:outputText value="#{tableBean.selectedUser.userGender}" />
+    </h:panelGrid>
+    <p:commandButton
+            id="dltBtn"
+            value="Принять"
+            action="#{tableBean.delete}"
+            process="@this dltDialog"
+            update=":form1"
+            validateClient="true"
+            oncomplete="PF('dlg2').hide();"
+    />
+        <p:commandButton
+            id="cnsBtn"
+            value="Отменить"
+            immediate="true"
+            process="@this"
+            update=":form1"
+            oncomplete="PF('dlg2').hide();"
+            />
+    </p:dialog>
+</h:form>
+</html>
